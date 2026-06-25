@@ -46,7 +46,19 @@ app.get('/convert', (req, res) => {
   const tmpBase = path.join(os.tmpdir(), `ytmp3_${Date.now()}`);
   const tmpTemplate = tmpBase + '.%(ext)s';
 
-  const args = ['-x', '--audio-format', 'mp3', '--audio-quality', '0', '--no-playlist', '--no-check-certificates'];
+  const args = [
+  '-x',
+  '--audio-format',
+  'mp3',
+  '--audio-quality',
+  '0',
+  '--no-playlist',
+  '--no-check-certificates',
+  '--js-runtimes',
+  'node',
+  '--extractor-args',
+  'youtube:player_client=android'
+];
   if (cookiesExist) args.push('--cookies', COOKIES);
   args.push('-o', tmpTemplate, url);
 
@@ -58,11 +70,14 @@ app.get('/convert', (req, res) => {
   dl.stdout.on('data', d => { console.log('[yt-dlp out]', d.toString()); });
 
   dl.on('close', (code) => {
-    if (code !== 0) {
-      console.error('[yt-dlp error]', stderr);
-      return res.status(500).json({ error: 'Download failed. The video may be private, age-restricted, or unavailable.' });
-    }
+  if (code !== 0) {
+    console.error('[yt-dlp exit code]', code);
+    console.error('[yt-dlp full error]', stderr);
 
+    return res.status(500).json({ 
+      error: stderr || `yt-dlp failed with code ${code}` 
+    });
+  }
     let finalFile = null;
     for (const ext of ['.mp3', '.webm', '.m4a', '.opus']) {
       if (fs.existsSync(tmpBase + ext)) { finalFile = tmpBase + ext; break; }
