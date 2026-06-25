@@ -23,7 +23,7 @@ app.post('/info', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'No URL provided' });
 
   const cookiesArg = cookiesExist ? `--cookies "${COOKIES}"` : '';
-  const cmd = `yt-dlp --dump-json --no-playlist --no-check-certificates ${cookiesArg} -q "${url}"`;
+  const cmd = `yt-dlp --dump-json --no-playlist --no-check-certificates --js-runtimes node ${cookiesArg} "${url}"`;
 
   exec(cmd, { timeout: 30000 }, (err, stdout, stderr) => {
     if (err) {
